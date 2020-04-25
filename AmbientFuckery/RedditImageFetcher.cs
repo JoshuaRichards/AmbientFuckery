@@ -19,7 +19,7 @@ namespace AmbientFuckery
             this.httpClient = httpClient;
         }
 
-        public async Task<IEnumerable<ImageData>> GetImagesAsync()
+        public async IAsyncEnumerable<ImageData> GetImagesAsync()
         {
             var url = "https://www.reddit.com/r/earthporn/top/.json?t=day";
 
@@ -27,19 +27,17 @@ namespace AmbientFuckery
             var submissions = JsonConvert.DeserializeObject<Listing>(response)
                 .Data.Children.Select(x => x.Data).ToList();
 
-            var ret = new List<ImageData>();
             foreach (var submission in submissions)
             {
                 var bytes = await GetBytesAsync(submission.Url);
                 if (bytes == null) continue;
 
-                ret.Add(new ImageData
+                yield return new ImageData
                 {
                     Bytes = bytes,
                     Description = $"reddit.com{submission.Permalink}",
-                });
+                };
             }
-            return ret;
         }
 
         private async Task<byte[]> GetBytesAsync(string url)

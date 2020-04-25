@@ -45,14 +45,14 @@ namespace AmbientFuckery
                 .Value<string>("id");
         }
 
-        public async Task UploadImages(IEnumerable<ImageData> images)
+        public async Task UploadImages(IAsyncEnumerable<ImageData> images)
         {
             var token = await GetAuthTokenAsync();
             httpClient.DefaultRequestHeaders.Authorization =
                 new AuthenticationHeaderValue("Bearer", token);
 
             var uploads = new List<(string uploadToken, string description)>();
-            foreach (var image in images)
+            await foreach (var image in images)
             {
                 var content = new ByteArrayContent(image.Bytes);
                 content.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");

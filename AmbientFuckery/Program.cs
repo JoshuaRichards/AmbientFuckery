@@ -17,7 +17,7 @@ namespace AmbientFuckery
 
             //var albumId = await photoUploader.CreateAlbumAsync();
 
-            var images = await imageFetcher.GetImagesAsync();
+            var images = imageFetcher.GetImagesAsync();
             await photoUploader.UploadImages(images);
         }
     }
