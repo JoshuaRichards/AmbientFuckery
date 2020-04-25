@@ -56,7 +56,7 @@ namespace AmbientFuckery
             {
                 var content = new ByteArrayContent(image.Bytes);
                 content.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
-                content.Headers.Add("X-Goog-Upload-Content-Type", "image/jpeg");
+                content.Headers.Add("X-Goog-Upload-Content-Type", image.ContentType);
                 content.Headers.Add("X-Goog-Upload-Protocol", "raw");
 
                 var response = await httpClient.PostAsync(

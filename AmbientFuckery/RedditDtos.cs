@@ -13,6 +13,8 @@ namespace RedditDtos
     {
         [JsonProperty("children")]
         public IEnumerable<Submission> Children { get; set; }
+        [JsonProperty("after")]
+        public string After { get; set; }
     }
 
     public class Submission
@@ -35,5 +37,7 @@ namespace RedditDtos
         public string Permalink { get; set; }
         [JsonProperty("author")]
         public string Author { get; set; }
+        [JsonProperty("score")]
+        public int Score { get; set; }
     }
 }

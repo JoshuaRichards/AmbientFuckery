@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using RedditDtos;
+using SixLabors.ImageSharp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,34 +22,64 @@ namespace AmbientFuckery
 
         public async IAsyncEnumerable<ImageData> GetImagesAsync()
         {
-            var url = "https://www.reddit.com/r/earthporn/top/.json?t=day";
-
-            var response = await httpClient.GetStringAsync(url);
-            var submissions = JsonConvert.DeserializeObject<Listing>(response)
-                .Data.Children.Select(x => x.Data).ToList();
-
-            foreach (var submission in submissions)
+            foreach (var subreddit in new[] { "earthporn", "spaceporn", "wallpaper", "wallpapers" })
             {
-                var bytes = await GetBytesAsync(submission.Url);
-                if (bytes == null) continue;
+                int max = 30;
+                int count = 0;
+                int minScore = 100;
 
-                yield return new ImageData
+                await foreach (var submission in GetSubmissionsAsync(subreddit))
                 {
-                    Bytes = bytes,
-                    Description = $"reddit.com{submission.Permalink}",
-                };
+                    if (submission.Score < minScore) break;
+
+                    var image = await DownloadImageAsync(submission.Url);
+                    if (image == null) continue;
+
+                    image.Description = $"https://reddit.com{submission.Permalink}";
+
+                    yield return image;
+                    if (++count >= max) break;
+                }
             }
         }
 
-        private async Task<byte[]> GetBytesAsync(string url)
+        private async IAsyncEnumerable<SubmissionData> GetSubmissionsAsync(string subreddit)
         {
+            var baseUrl = $"https://www.reddit.com/r/{subreddit}/top/.json?t=day";
+            var url = baseUrl;
+
+            while (true)
+            {
+                var response = await httpClient.GetStringAsync(url);
+                var data = JsonConvert.DeserializeObject<Listing>(response).Data;
+
+                foreach (var submission in data.Children)
+                {
+                    yield return submission.Data;
+                }
+
+                if (data.After == null) break;
+
+                url = $"{baseUrl}&after={data.After}";
+            }
+        }
+
+        private async Task<ImageData> DownloadImageAsync(string url)
+        {
+            var allowedContentTypes = new HashSet<string> { "image/jpeg", "image/png" };
             try
             {
                 var response = await httpClient.GetAsync(url);
                 if (!response.IsSuccessStatusCode) return null;
-                if (response.Content.Headers.ContentType.MediaType != "image/jpeg") return null;
+                var contentType = response.Content.Headers.ContentType?.MediaType;
+                if (string.IsNullOrEmpty(contentType)) return null;
+                if (!allowedContentTypes.Contains(contentType)) return null;
 
-                return await response.Content.ReadAsByteArrayAsync();
+                return new ImageData
+                {
+                    Bytes = await response.Content.ReadAsByteArrayAsync(),
+                    ContentType = contentType,
+                };
             }
             catch
             {
@@ -61,5 +92,6 @@ namespace AmbientFuckery
     {
         public string Description { get; set; }
         public byte[] Bytes { get; set; }
+        public string ContentType { get; set; }
     }
 }
