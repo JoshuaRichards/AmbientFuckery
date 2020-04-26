@@ -1,10 +1,7 @@
-﻿using Newtonsoft.Json;
-using RedditDtos;
-using System;
-using System.Net.Http;
-using System.Linq;
+﻿using System.Net.Http;
 using System.Threading.Tasks;
-using System.Net;
+using AmbientFuckery.Repositories;
+using AmbientFuckery.Services;
 
 namespace AmbientFuckery
 {
@@ -13,12 +10,15 @@ namespace AmbientFuckery
         public static async Task Main(string[] args)
         {
             var imageFetcher = new RedditImageFetcher(new HttpClient());
-            var photoUploader = new GooglePhotosUploader(new HttpClient());
+            var photosManager = new GooglePhotosManager(new HttpClient());
+            var imageCurator = new ImageCurator(new ImageManipulator(), imageFetcher, new SubredditConfigRepository());
 
             //var albumId = await photoUploader.CreateAlbumAsync();
 
-            var images = imageFetcher.GetImagesAsync();
-            await photoUploader.UploadImages(images);
+            var images = imageCurator.GetImagesAsync();
+
+            await photosManager.NukeAlbum();
+            await photosManager.UploadImages(images);
         }
     }
 }

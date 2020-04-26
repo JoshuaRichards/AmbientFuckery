@@ -1,15 +1,11 @@
-﻿using Newtonsoft.Json;
+﻿using AmbientFuckery.Pocos;
+using Newtonsoft.Json;
 using RedditDtos;
-using SixLabors.ImageSharp;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Net;
 using System.Net.Http;
-using System.Text;
 using System.Threading.Tasks;
 
-namespace AmbientFuckery
+namespace AmbientFuckery.Services
 {
     public class RedditImageFetcher
     {
@@ -20,26 +16,17 @@ namespace AmbientFuckery
             this.httpClient = httpClient;
         }
 
-        public async IAsyncEnumerable<ImageData> GetImagesAsync()
+        public async IAsyncEnumerable<ImageData> GetImagesAsync(string subreddit)
         {
-            foreach (var subreddit in new[] { "earthporn", "spaceporn", "wallpaper", "wallpapers" })
+            await foreach (var submission in GetSubmissionsAsync(subreddit))
             {
-                int max = 30;
-                int count = 0;
-                int minScore = 100;
+                var image = await DownloadImageAsync(submission.Url);
+                if (image == null) continue;
 
-                await foreach (var submission in GetSubmissionsAsync(subreddit))
-                {
-                    if (submission.Score < minScore) break;
+                image.Description = $"https://reddit.com{submission.Permalink}";
+                image.Score = submission.Score;
 
-                    var image = await DownloadImageAsync(submission.Url);
-                    if (image == null) continue;
-
-                    image.Description = $"https://reddit.com{submission.Permalink}";
-
-                    yield return image;
-                    if (++count >= max) break;
-                }
+                yield return image;
             }
         }
 
@@ -88,10 +75,4 @@ namespace AmbientFuckery
         }
     }
 
-    public class ImageData
-    {
-        public string Description { get; set; }
-        public byte[] Bytes { get; set; }
-        public string ContentType { get; set; }
-    }
 }
