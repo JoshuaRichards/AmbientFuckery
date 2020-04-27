@@ -37,7 +37,7 @@ namespace AmbientFuckery.Services
                 {
                     if (imageData.Score < subredditConfig.MinScore) break;
 
-                    var image = imageManipulator.ParseImage(imageData);
+                    using var image = imageManipulator.ParseImage(imageData);
 
                     double width = image.Width;
                     double height = image.Height;

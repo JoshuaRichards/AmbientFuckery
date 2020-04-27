@@ -51,6 +51,14 @@ namespace AmbientFuckery.Repositories
                     MinScore = 100,
                     MinHeight = 1080,
                 },
+                new SubredditConfig
+                {
+                    SubredditName = "cyberpunk",
+                    MaxFetch = 30,
+                    MinAspectRatio = 1.3d,
+                    MinScore = 100,
+                    MinHeight = 1080,
+                },
             };
         }
     }

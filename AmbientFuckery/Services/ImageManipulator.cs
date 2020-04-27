@@ -10,7 +10,7 @@ namespace AmbientFuckery.Services
 {
     public class ImageManipulator
     {
-        public Image ParseImage(ImageData image)
+        public IImage ParseImage(ImageData image)
         {
             var img = Image.Load(image.Bytes, GetDecoder(image.ContentType));
             return img;

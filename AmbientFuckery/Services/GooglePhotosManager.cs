@@ -103,7 +103,6 @@ namespace AmbientFuckery.Services
             {
                 { "mediaItemIds", ids }
             };
-            var x = JsonConvert.SerializeObject(request);
 
             var content = new StringContent(
                 JsonConvert.SerializeObject(request), Encoding.UTF8, "application/json"
