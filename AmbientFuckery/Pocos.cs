@@ -1,4 +1,6 @@
-﻿namespace AmbientFuckery.Pocos
+﻿using System;
+
+namespace AmbientFuckery.Pocos
 {
     public class ImageData
     {
@@ -15,5 +17,13 @@
         public int MaxFetch { get; set; }
         public double MinAspectRatio { get; set; }
         public int MinHeight { get; set; }
+    }
+
+    public class GoogleCredentials
+    {
+        public int Id { get; set; }
+        public string AccessToken { get; set; }
+        public string RefreshToken { get; set; }
+        public DateTime AccessTokenExpiry { get; set; }
     }
 }
