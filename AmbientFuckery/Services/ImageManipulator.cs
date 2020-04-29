@@ -1,14 +1,14 @@
-﻿using AmbientFuckery.Pocos;
+﻿using AmbientFuckery.Contracts;
+using AmbientFuckery.Pocos;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats;
 using SixLabors.ImageSharp.Formats.Jpeg;
 using SixLabors.ImageSharp.Formats.Png;
 using System;
-using System.Drawing;
 
 namespace AmbientFuckery.Services
 {
-    public class ImageManipulator
+    public class ImageManipulator : IImageManipulator
     {
         public IImage ParseImage(ImageData image)
         {

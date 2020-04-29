@@ -1,11 +1,12 @@
-﻿using AmbientFuckery.Pocos;
+﻿using AmbientFuckery.Contracts;
+using AmbientFuckery.Pocos;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace AmbientFuckery.Repositories
 {
-    public class SubredditConfigRepository
+    public class SubredditConfigRepository : ISubredditConfigRepository
     {
         public IEnumerable<SubredditConfig> GetSubredditConfigs()
         {

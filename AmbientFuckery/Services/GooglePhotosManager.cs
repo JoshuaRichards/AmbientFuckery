@@ -1,4 +1,5 @@
-﻿using AmbientFuckery.Pocos;
+﻿using AmbientFuckery.Contracts;
+using AmbientFuckery.Pocos;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
@@ -15,13 +16,18 @@ using static System.Web.HttpUtility;
 
 namespace AmbientFuckery.Services
 {
-    public class GooglePhotosManager
+    public class GooglePhotosManager : IGooglePhotosManager
     {
         private readonly HttpClient httpClient;
+        private readonly IApiKeyRepository apiKeyRepository;
 
-        public GooglePhotosManager(HttpClient httpClient)
+        public GooglePhotosManager(
+            HttpClient httpClient,
+            IApiKeyRepository apiKeyRepository
+        )
         {
             this.httpClient = httpClient;
+            this.apiKeyRepository = apiKeyRepository;
         }
 
         public async Task<string> CreateAlbumAsync()
@@ -43,7 +49,12 @@ namespace AmbientFuckery.Services
                 .Value<string>("id");
         }
 
-        public async Task NukeAlbum()
+        private string GetAlbumId()
+        {
+            return Environment.GetEnvironmentVariable("AMBIENT_FUCKERY_ALBUM_ID");
+        }
+
+        public async Task NukeAlbumAsync()
         {
             var albumId = GetAlbumId();
 
@@ -111,11 +122,6 @@ namespace AmbientFuckery.Services
             var response = await httpClient.PostAsync(url, content);
             response.EnsureSuccessStatusCode();
         }
-        
-        private string GetAlbumId()
-        {
-            return Environment.GetEnvironmentVariable("AMBIENT_FUCKERY_ALBUM_ID");
-        }
 
         public async Task UploadImages(IAsyncEnumerable<ImageData> images)
         {
@@ -170,7 +176,7 @@ namespace AmbientFuckery.Services
         private async Task GetAuthTokenAsync()
         {
             if (authTokenLoaded) return;
-            var clientId = Environment.GetEnvironmentVariable("AMBIENT_FUCKERY_CLIENT_ID");
+            var clientId = apiKeyRepository.GetClientId();
             var redirectUri = "http://localhost:6969";
             var scope = "https://www.googleapis.com/auth/photoslibrary";
 
@@ -206,7 +212,7 @@ namespace AmbientFuckery.Services
                 listener.Stop();
             }
 
-            var clientSecret = Environment.GetEnvironmentVariable("AMBIENT_FUCKERY_CLIENT_SECRET");
+            var clientSecret = apiKeyRepository.GetClientSecret();
             url = new StringBuilder();
             url.Append("https://oauth2.googleapis.com/token?");
             url.Append($"client_id={UrlEncode(clientId)}&");

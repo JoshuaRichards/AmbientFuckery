@@ -1,22 +1,19 @@
-﻿using AmbientFuckery.Pocos;
-using AmbientFuckery.Repositories;
-using SixLabors.ImageSharp;
-using System;
+﻿using AmbientFuckery.Contracts;
+using AmbientFuckery.Pocos;
 using System.Collections.Generic;
-using System.Text;
 
 namespace AmbientFuckery.Services
 {
-    public class ImageCurator
+    public class ImageCurator : IImageCurator
     {
-        private readonly ImageManipulator imageManipulator;
-        private readonly RedditImageFetcher redditImageFetcher;
-        private readonly SubredditConfigRepository subredditConfigRepository;
+        private readonly IImageManipulator imageManipulator;
+        private readonly IRedditImageFetcher redditImageFetcher;
+        private readonly ISubredditConfigRepository subredditConfigRepository;
 
         public ImageCurator(
-            ImageManipulator imageManipulator,
-            RedditImageFetcher redditImageFetcher,
-            SubredditConfigRepository subredditConfigRepository
+            IImageManipulator imageManipulator,
+            IRedditImageFetcher redditImageFetcher,
+            ISubredditConfigRepository subredditConfigRepository
         )
         {
             this.imageManipulator = imageManipulator;

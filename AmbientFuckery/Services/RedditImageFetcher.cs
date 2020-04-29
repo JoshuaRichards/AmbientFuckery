@@ -1,4 +1,5 @@
-﻿using AmbientFuckery.Pocos;
+﻿using AmbientFuckery.Contracts;
+using AmbientFuckery.Pocos;
 using Newtonsoft.Json;
 using RedditDtos;
 using System.Collections.Generic;
@@ -7,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace AmbientFuckery.Services
 {
-    public class RedditImageFetcher
+    public class RedditImageFetcher : IRedditImageFetcher
     {
         private readonly HttpClient httpClient;
 

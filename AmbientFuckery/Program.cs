@@ -1,24 +1,37 @@
-﻿using System.Net.Http;
+﻿using AmbientFuckery.Contracts;
+using Autofac;
+using System.Net.Http;
+using System.Reflection;
 using System.Threading.Tasks;
-using AmbientFuckery.Repositories;
-using AmbientFuckery.Services;
 
 namespace AmbientFuckery
 {
     public class Program
     {
+        private static IContainer container;
+
         public static async Task Main(string[] args)
         {
-            var imageFetcher = new RedditImageFetcher(new HttpClient());
-            var photosManager = new GooglePhotosManager(new HttpClient());
-            var imageCurator = new ImageCurator(new ImageManipulator(), imageFetcher, new SubredditConfigRepository());
+            Init();
 
-            //var albumId = await photoUploader.CreateAlbumAsync();
+            var imageCurator = container.Resolve<IImageCurator>();
+            var photosManager = container.Resolve<IGooglePhotosManager>();
 
             var images = imageCurator.GetImagesAsync();
-
-            await photosManager.NukeAlbum();
+            await photosManager.NukeAlbumAsync();
             await photosManager.UploadImages(images);
+        }
+
+        private static void Init()
+        {
+            var builder = new ContainerBuilder();
+
+            builder.RegisterAssemblyTypes(Assembly.GetExecutingAssembly())
+                .AsImplementedInterfaces();
+
+            builder.Register(_ => new HttpClient());
+
+            container = builder.Build();
         }
     }
 }
