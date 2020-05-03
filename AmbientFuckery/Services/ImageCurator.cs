@@ -29,7 +29,7 @@ namespace AmbientFuckery.Services
             foreach (var subredditConfig in subredditConfigs)
             {
                 var images = redditImageFetcher.GetImagesAsync(subredditConfig.SubredditName)
-                    .Where(i => !i.IsNsfw)
+                    .Where(i => subredditConfig.AllowNsfw || !i.IsNsfw)
                     .Where(i => IsBigEnough(i, subredditConfig))
                     .TakeWhile(i => i.Score >= subredditConfig.MinScore)
                     .Take(subredditConfig.MaxFetch);
