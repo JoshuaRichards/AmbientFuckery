@@ -1,4 +1,5 @@
 ﻿using AmbientFuckery.Contracts;
+using AmbientFuckery.Repositories;
 using Autofac;
 using System.Net.Http;
 using System.Reflection;
@@ -18,8 +19,7 @@ namespace AmbientFuckery
             var photosManager = container.Resolve<IGooglePhotosManager>();
 
             var images = imageCurator.GetImagesAsync();
-            await photosManager.NukeAlbumAsync();
-            await photosManager.UploadImages(images);
+            await photosManager.ReplaceImagesAsync(images);
         }
 
         private static void Init()
@@ -27,6 +27,7 @@ namespace AmbientFuckery
             var builder = new ContainerBuilder();
 
             builder.RegisterAssemblyTypes(Assembly.GetExecutingAssembly())
+                .Except<AmbientFuckeryDatabase>(x => x.As<IAmbientFuckeryDatabase>().SingleInstance())
                 .AsImplementedInterfaces();
 
             builder.Register(_ => new HttpClient());

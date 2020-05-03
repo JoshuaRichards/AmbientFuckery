@@ -1,6 +1,7 @@
 ﻿using AmbientFuckery.Contracts;
 using AmbientFuckery.Pocos;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace AmbientFuckery.Services
 {
@@ -27,25 +28,26 @@ namespace AmbientFuckery.Services
 
             foreach (var subredditConfig in subredditConfigs)
             {
-                var count = 0;
+                var images = redditImageFetcher.GetImagesAsync(subredditConfig.SubredditName)
+                    .Where(i => !i.IsNsfw)
+                    .Where(i => IsBigEnough(i, subredditConfig))
+                    .TakeWhile(i => i.Score >= subredditConfig.MinScore)
+                    .Take(subredditConfig.MaxFetch);
 
-                var images = redditImageFetcher.GetImagesAsync(subredditConfig.SubredditName);
-                await foreach (var imageData in images)
-                {
-                    if (imageData.Score < subredditConfig.MinScore) break;
-
-                    using var image = imageManipulator.ParseImage(imageData);
-
-                    double width = image.Width;
-                    double height = image.Height;
-                    double aspectRatio = width / height;
-                    if (aspectRatio < subredditConfig.MinAspectRatio) continue;
-                    if (height < subredditConfig.MinHeight) continue;
-
-                    yield return imageData;
-                    if (++count >= subredditConfig.MaxFetch) break;
-                }
+                await foreach (var image in images) yield return image;
             }
+        }
+
+        private bool IsBigEnough(ImageData imageData, SubredditConfig subredditConfig)
+        {
+            using var image = imageManipulator.ParseImage(imageData);
+
+            double width = image.Width;
+            double height = image.Height;
+            double aspectRatio = width / height;
+
+            return aspectRatio >= subredditConfig.MinAspectRatio &&
+                height >= subredditConfig.MinHeight;
         }
     }
 }

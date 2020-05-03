@@ -4,9 +4,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -18,55 +16,30 @@ namespace AmbientFuckery.Services
     public class GooglePhotosManager : IGooglePhotosManager
     {
         private readonly IGoogleHttpClient googleHttpClient;
+        private readonly IAlbumService albumService;
 
         public GooglePhotosManager(
-            IGoogleHttpClient httpClient
+            IGoogleHttpClient googleHttpClient,
+            IAlbumService albumService
         )
         {
-            this.googleHttpClient = httpClient;
+            this.googleHttpClient = googleHttpClient;
+            this.albumService = albumService;
         }
 
-        public async Task<string> CreateAlbumAsync()
+        public async Task ReplaceImagesAsync(IAsyncEnumerable<ImageData> images)
         {
-            var request = @"{
-                ""album"": {
-                    ""title"": ""Ambient Fuckery""
-                }
-            }";
-            var content = new StringContent(request, Encoding.UTF8, "application/json");
+            var albumId = await albumService.GetAlbumIdAsync();
 
-            var response = await googleHttpClient.PostAsync(
-                "https://photoslibrary.googleapis.com/v1/albums", content
-            );
-            response.EnsureSuccessStatusCode();
-            return JsonConvert.DeserializeObject<JObject>(await response.Content.ReadAsStringAsync())
-                .Value<string>("id");
-        }
+            var uploads = await BatchUploadAsync(images);
+            var existingItemIds = await GetMediaItemIdsAsync(albumId).ToListAsync();
 
-        private string GetAlbumId()
-        {
-            return Environment.GetEnvironmentVariable("AMBIENT_FUCKERY_ALBUM_ID");
-        }
+            var newMediaItemIds = await AddUploadsToAlbumAsync(albumId, uploads);
+            newMediaItemIds = new HashSet<string>(newMediaItemIds);
 
-        public async Task NukeAlbumAsync()
-        {
-            var albumId = GetAlbumId();
+            var itemsToRemove = existingItemIds.Where(x => !newMediaItemIds.Contains(x));
 
-            var buffer = new List<string>();
-            var bufferSize = 50;
-            await foreach (var id in GetMediaItemIdsAsync(albumId))
-            {
-                buffer.Add(id);
-                if (buffer.Count >= bufferSize)
-                {
-                    await RemoveMediaItemsFromAlbumAsync(albumId, buffer);
-                    buffer.Clear();
-                }
-            }
-            if (buffer.Any())
-            {
-                await RemoveMediaItemsFromAlbumAsync(albumId, buffer);
-            }
+            await RemoveMediaItemsFromAlbumAsync(albumId, itemsToRemove);
         }
 
         private async IAsyncEnumerable<string> GetMediaItemIdsAsync(string albumId)
@@ -102,22 +75,58 @@ namespace AmbientFuckery.Services
 
         private async Task RemoveMediaItemsFromAlbumAsync(string albumId, IEnumerable<string> ids)
         {
-            var request = new Dictionary<string, object>
-            {
-                { "mediaItemIds", ids }
-            };
+            const int pageSize = 50;
 
-            var content = new StringContent(
-                JsonConvert.SerializeObject(request), Encoding.UTF8, "application/json"
-            );
-            var url = $"https://photoslibrary.googleapis.com/v1/albums/{albumId}:batchRemoveMediaItems";
-            var response = await googleHttpClient.PostAsync(url, content);
-            response.EnsureSuccessStatusCode();
+            var list = ids.ToList();
+            while (list.Any())
+            {
+                var mediaItemIds = list.Take(pageSize);
+
+                var request = new { mediaItemIds };
+                var content = new StringContent(
+                    JsonConvert.SerializeObject(request), Encoding.UTF8, "application/json"
+                );
+                var url = $"https://photoslibrary.googleapis.com/v1/albums/{albumId}:batchRemoveMediaItems";
+                var response = await googleHttpClient.PostAsync(url, content);
+                response.EnsureSuccessStatusCode();
+
+                list.RemoveRange(0, Math.Min(pageSize, list.Count));
+            }
         }
 
-        public async Task UploadImages(IAsyncEnumerable<ImageData> images)
+        private async Task<IEnumerable<string>> AddUploadsToAlbumAsync(string albumId, IEnumerable<ImageUpload> uploads)
         {
-            var uploads = new List<(string uploadToken, string description)>();
+            var requestBody = new
+            {
+                albumId,
+                newMediaItems = uploads.Select(u => new
+                {
+                    description = u.Description,
+                    simpleMediaItem = new
+                    {
+                        uploadToken = u.UploadToken,
+                    },
+                }),
+            };
+
+            var createContent = new StringContent(JsonConvert.SerializeObject(requestBody));
+            createContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+
+            var createResponse = await googleHttpClient.PostAsync(
+                "https://photoslibrary.googleapis.com/v1/mediaItems:batchCreate", createContent
+            );
+            createResponse.EnsureSuccessStatusCode();
+
+            return JObject.Parse(await createResponse.Content.ReadAsStringAsync())
+                .Value<JArray>("newMediaItemResults")
+                .Select(o => o.Value<JObject>("mediaItem"))
+                .Select(o => o.Value<string>("id"))
+                .ToList();
+        }
+
+        private async Task<List<ImageUpload>> BatchUploadAsync(IAsyncEnumerable<ImageData> images)
+        {
+            var uploads = new List<ImageUpload>();
             await foreach (var image in images)
             {
                 var content = new ByteArrayContent(image.Bytes);
@@ -128,38 +137,17 @@ namespace AmbientFuckery.Services
                 var response = await googleHttpClient.PostAsync(
                     "https://photoslibrary.googleapis.com/v1/uploads", content
                 );
-
                 response.EnsureSuccessStatusCode();
-                uploads.Add((await response.Content.ReadAsStringAsync(), image.Description));
+
+                var uploadToken = await response.Content.ReadAsStringAsync();
+                uploads.Add(new ImageUpload
+                {
+                    UploadToken = uploadToken,
+                    Description = image.Description,
+                });
             }
 
-            var albumId = GetAlbumId();
-            var requestBody = new Dictionary<string, object>
-            {
-                { "albumId", albumId },
-                {
-                    "newMediaItems",
-                    uploads.Select(u => new Dictionary<string, object>
-                    {
-                        { "description", u.description },
-                        {
-                            "simpleMediaItem",
-                            new Dictionary<string, object>
-                            {
-                                { "uploadToken", u.uploadToken }
-                            }
-                        }
-                    })
-                }
-            };
-
-            var createContent = new StringContent(JsonConvert.SerializeObject(requestBody));
-            createContent.Headers.ContentType = new MediaTypeHeaderValue("application/json");
-
-            var createResponse = await googleHttpClient.PostAsync(
-                "https://photoslibrary.googleapis.com/v1/mediaItems:batchCreate", createContent
-            );
-            createResponse.EnsureSuccessStatusCode();
+            return uploads;
         }
     }
 }

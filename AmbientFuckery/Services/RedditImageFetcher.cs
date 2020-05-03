@@ -4,6 +4,7 @@ using Newtonsoft.Json;
 using RedditDtos;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace AmbientFuckery.Services
@@ -21,14 +22,24 @@ namespace AmbientFuckery.Services
         {
             await foreach (var submission in GetSubmissionsAsync(subreddit))
             {
-                var image = await DownloadImageAsync(submission.Url);
+                var url = GetUrl(submission);
+                var image = await DownloadImageAsync(url);
                 if (image == null) continue;
 
                 image.Description = $"https://reddit.com{submission.Permalink}";
                 image.Score = submission.Score;
+                image.IsNsfw = submission.Over18;
 
                 yield return image;
             }
+        }
+
+        private string GetUrl(SubmissionData submission)
+        {
+            if (submission.Domain != "imgur.com") return submission.Url;
+            if (Regex.IsMatch(submission.Url, @"\.\w{3,}$")) return submission.Url;
+
+            return submission.Url + ".jpg";
         }
 
         private async IAsyncEnumerable<SubmissionData> GetSubmissionsAsync(string subreddit)

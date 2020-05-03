@@ -1,8 +1,6 @@
 ﻿using AmbientFuckery.Contracts;
 using AmbientFuckery.Pocos;
-using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace AmbientFuckery.Repositories
 {
@@ -19,6 +17,7 @@ namespace AmbientFuckery.Repositories
                     MinAspectRatio = 1.3d,
                     MinScore = 100,
                     MinHeight = 1080,
+                    AllowNsfw = false,
                 },
                 new SubredditConfig
                 {
@@ -27,6 +26,7 @@ namespace AmbientFuckery.Repositories
                     MinAspectRatio = 1.3d,
                     MinScore = 100,
                     MinHeight = 1080,
+                    AllowNsfw = false,
                 },
                 new SubredditConfig
                 {
@@ -35,6 +35,7 @@ namespace AmbientFuckery.Repositories
                     MinAspectRatio = 1.3d,
                     MinScore = 100,
                     MinHeight = 1080,
+                    AllowNsfw = false,
                 },
                 new SubredditConfig
                 {
@@ -43,6 +44,7 @@ namespace AmbientFuckery.Repositories
                     MinAspectRatio = 1.3d,
                     MinScore = 100,
                     MinHeight = 1080,
+                    AllowNsfw = false,
                 },
                 new SubredditConfig
                 {
@@ -51,14 +53,7 @@ namespace AmbientFuckery.Repositories
                     MinAspectRatio = 1.3d,
                     MinScore = 100,
                     MinHeight = 1080,
-                },
-                new SubredditConfig
-                {
-                    SubredditName = "cyberpunk",
-                    MaxFetch = 30,
-                    MinAspectRatio = 1.3d,
-                    MinScore = 100,
-                    MinHeight = 1080,
+                    AllowNsfw = false,
                 },
             };
         }

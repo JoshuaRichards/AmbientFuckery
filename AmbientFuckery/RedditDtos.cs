@@ -39,5 +39,7 @@ namespace RedditDtos
         public string Author { get; set; }
         [JsonProperty("score")]
         public int Score { get; set; }
+        [JsonProperty("over_18")]
+        public bool Over18 { get; set; }
     }
 }
