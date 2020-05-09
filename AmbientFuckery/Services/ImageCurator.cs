@@ -40,7 +40,7 @@ namespace AmbientFuckery.Services
 
         private bool IsBigEnough(ImageData imageData, SubredditConfig subredditConfig)
         {
-            using var image = imageManipulator.ParseImage(imageData);
+            var image = imageManipulator.ParseImage(imageData);
 
             double width = image.Width;
             double height = image.Height;

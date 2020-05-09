@@ -1,5 +1,6 @@
 ﻿using AmbientFuckery.Contracts;
 using AmbientFuckery.Pocos;
+using AmbientFuckery.Tools;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
@@ -120,6 +121,7 @@ namespace AmbientFuckery.Services
             return JObject.Parse(await createResponse.Content.ReadAsStringAsync())
                 .Value<JArray>("newMediaItemResults")
                 .Select(o => o.Value<JObject>("mediaItem"))
+                .Where(o => o != null)
                 .Select(o => o.Value<string>("id"))
                 .ToList();
         }
@@ -129,7 +131,7 @@ namespace AmbientFuckery.Services
             var uploads = new List<ImageUpload>();
             await foreach (var image in images)
             {
-                var content = new ByteArrayContent(image.Bytes);
+                var content = new StreamContent(new AsyncEnumerableStream(image.Stream));
                 content.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
                 content.Headers.Add("X-Goog-Upload-Content-Type", image.ContentType);
                 content.Headers.Add("X-Goog-Upload-Protocol", "raw");

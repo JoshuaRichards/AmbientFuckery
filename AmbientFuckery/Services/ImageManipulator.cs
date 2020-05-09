@@ -1,32 +1,17 @@
 ﻿using AmbientFuckery.Contracts;
 using AmbientFuckery.Pocos;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats;
-using SixLabors.ImageSharp.Formats.Jpeg;
-using SixLabors.ImageSharp.Formats.Png;
-using System;
+using AmbientFuckery.Tools;
+using ImageMagick;
 
 namespace AmbientFuckery.Services
 {
     public class ImageManipulator : IImageManipulator
     {
-        public IImage ParseImage(ImageData image)
+        public IMagickImageInfo ParseImage(ImageData image)
         {
-            var img = Image.Load(image.Bytes, GetDecoder(image.ContentType));
-            return img;
-        }
-
-        private IImageDecoder GetDecoder(string contentType)
-        {
-            switch (contentType)
-            {
-                case "image/jpeg":
-                    return new JpegDecoder();
-                case "image/png":
-                    return new PngDecoder();
-                default:
-                    throw new NotImplementedException($"unhandled content type: {contentType}");
-            }
+            using var stream = new AsyncEnumerableStream(image.Stream);
+            var info = new MagickImageInfo(stream);
+            return info;
         }
     }
 }
