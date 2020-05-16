@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -71,49 +72,21 @@ namespace AmbientFuckery.Services
             var allowedContentTypes = new HashSet<string> { "image/jpeg", "image/png" };
             try
             {
-                var response = await httpClient.SendAsync(new HttpRequestMessage { RequestUri = new Uri(url), Method = HttpMethod.Head });
-                if (!response.IsSuccessStatusCode) return null;
-                var contentType = response.Content.Headers.ContentType?.MediaType;
+                var stream = new RangeRequestStream(httpClient, url);
+                if (!(await stream.CanConnectAsync())) return null;
+                var contentType = await stream.GetContentTypeAsync();
                 if (string.IsNullOrEmpty(contentType)) return null;
                 if (!allowedContentTypes.Contains(contentType)) return null;
 
-                var length = response.Content.Headers.ContentLength.Value;
-
                 return new ImageData
                 {
-                    Stream = StreamImageAsync(url, length),
+                    Stream = stream,
                     ContentType = contentType,
                 };
             }
             catch
             {
                 return null;
-            }
-        }
-
-        private async IAsyncEnumerable<byte> StreamImageAsync(string url, long length)
-        {
-            const int bytesPerRequest = 10 * 1024;
-
-            long pos = 0;
-            while (pos < length - 1)
-            {
-                var to = Math.Min(pos + bytesPerRequest - 1, length - 1);
-                var request = new HttpRequestMessage
-                {
-                    RequestUri = new Uri(url),
-                    Method = HttpMethod.Get,
-                };
-                request.Headers.Range = new RangeHeaderValue(pos, to);
-
-                var response = await httpClient.SendAsync(request);
-                response.EnsureSuccessStatusCode();
-
-                pos += response.Content.Headers.ContentLength.Value;
-                foreach (var b in await response.Content.ReadAsByteArrayAsync())
-                {
-                    yield return b;
-                }
             }
         }
     }

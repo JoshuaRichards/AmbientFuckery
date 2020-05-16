@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AmbientFuckery.Tools;
+using System;
 using System.Collections.Generic;
 using System.IO;
 
@@ -7,7 +8,7 @@ namespace AmbientFuckery.Pocos
     public class ImageData
     {
         public string Description { get; set; }
-        public IAsyncEnumerable<byte> Stream { get; set; }
+        public Stream Stream { get; set; }
         public string ContentType { get; set; }
         public int Score { get; set; }
         public bool IsNsfw { get; set; }

@@ -14,9 +14,9 @@ namespace AmbientFuckery.Repositories
                 {
                     SubredditName = "earthporn",
                     MaxFetch = 30,
-                    MinAspectRatio = 1.3d,
+                    MinAspectRatio = 1.2d,
                     MinScore = 100,
-                    MinHeight = 1080,
+                    MinHeight = 1000,
                     AllowNsfw = false,
                 },
                 new SubredditConfig

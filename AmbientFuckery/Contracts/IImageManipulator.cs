@@ -1,10 +1,10 @@
 ﻿using AmbientFuckery.Pocos;
-using ImageMagick;
+using SixLabors.ImageSharp;
 
 namespace AmbientFuckery.Contracts
 {
     public interface IImageManipulator
     {
-        IMagickImageInfo ParseImage(ImageData image);
+        IImageInfo ParseImage(ImageData image);
     }
 }

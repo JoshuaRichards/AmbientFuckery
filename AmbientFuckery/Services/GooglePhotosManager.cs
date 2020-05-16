@@ -118,8 +118,9 @@ namespace AmbientFuckery.Services
             );
             createResponse.EnsureSuccessStatusCode();
 
-            return JObject.Parse(await createResponse.Content.ReadAsStringAsync())
-                .Value<JArray>("newMediaItemResults")
+            var newMediaItemResults = JObject.Parse(await createResponse.Content.ReadAsStringAsync())
+                .Value<JArray>("newMediaItemResults");
+            return newMediaItemResults
                 .Select(o => o.Value<JObject>("mediaItem"))
                 .Where(o => o != null)
                 .Select(o => o.Value<string>("id"))
@@ -131,7 +132,9 @@ namespace AmbientFuckery.Services
             var uploads = new List<ImageUpload>();
             await foreach (var image in images)
             {
-                var content = new StreamContent(new AsyncEnumerableStream(image.Stream));
+                var stream = image.Stream;
+                stream.Position = 0;
+                var content = new StreamContent(stream);
                 content.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
                 content.Headers.Add("X-Goog-Upload-Content-Type", image.ContentType);
                 content.Headers.Add("X-Goog-Upload-Protocol", "raw");
@@ -147,6 +150,8 @@ namespace AmbientFuckery.Services
                     UploadToken = uploadToken,
                     Description = image.Description,
                 });
+                content.Dispose();
+                stream.Dispose();
             }
 
             return uploads;
