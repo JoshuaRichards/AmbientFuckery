@@ -1,11 +1,41 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using AmbientFuckery.Contracts;
+using AmbientFuckery.Pocos;
+using AmbientFuckery.Tools;
+using System;
+using System.Net.Http;
+using System.Threading.Tasks;
 
 namespace AmbientFuckery.Services
 {
-    public class RangeRequestService
+    public class RangeRequestService : IRangeRequestService
     {
+        private readonly HttpClient httpClient;
 
+        public RangeRequestService(HttpClient httpClient)
+        {
+            this.httpClient = httpClient;
+        }
+
+        public async Task<ImageData> GetImageDataAsync(string url)
+        {
+            using var head = await httpClient.SendAsync(new HttpRequestMessage
+            {
+                RequestUri = new Uri(url),
+                Method = HttpMethod.Head,
+            });
+            if (!head.IsSuccessStatusCode) return null;
+            var length = head.Content.Headers.ContentLength;
+            if (length == null) return null;
+            if (!head.Headers.AcceptRanges.Contains("bytes")) return null;
+
+            var contentType = head.Content.Headers.ContentType.MediaType;
+            var stream = new RangeRequestStream(httpClient, url, length.Value);
+
+            return new ImageData
+            {
+                Stream = stream,
+                ContentType = contentType,
+            };
+        }
     }
 }

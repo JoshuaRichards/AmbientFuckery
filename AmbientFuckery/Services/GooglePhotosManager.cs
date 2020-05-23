@@ -132,9 +132,11 @@ namespace AmbientFuckery.Services
             var uploads = new List<ImageUpload>();
             await foreach (var image in images)
             {
-                var stream = image.Stream;
+                using var stream = image.Stream;
                 stream.Position = 0;
-                var content = new StreamContent(stream);
+                var bytes = new byte[stream.Length];
+                await stream.ReadAsync(bytes);
+                var content = new ByteArrayContent(bytes);
                 content.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
                 content.Headers.Add("X-Goog-Upload-Content-Type", image.ContentType);
                 content.Headers.Add("X-Goog-Upload-Protocol", "raw");

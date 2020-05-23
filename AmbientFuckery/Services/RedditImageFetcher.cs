@@ -16,10 +16,15 @@ namespace AmbientFuckery.Services
     public class RedditImageFetcher : IRedditImageFetcher
     {
         private readonly HttpClient httpClient;
+        private readonly IRangeRequestService rangeRequestService;
 
-        public RedditImageFetcher(HttpClient httpClient)
+        public RedditImageFetcher(
+            HttpClient httpClient,
+            IRangeRequestService rangeRequestService
+        )
         {
             this.httpClient = httpClient;
+            this.rangeRequestService = rangeRequestService;
         }
 
         public async IAsyncEnumerable<ImageData> GetImagesAsync(string subreddit)
@@ -70,24 +75,12 @@ namespace AmbientFuckery.Services
         private async Task<ImageData> GetImageDataAsync(string url)
         {
             var allowedContentTypes = new HashSet<string> { "image/jpeg", "image/png" };
-            try
-            {
-                var stream = new RangeRequestStream(httpClient, url);
-                if (!(await stream.CanConnectAsync())) return null;
-                var contentType = await stream.GetContentTypeAsync();
-                if (string.IsNullOrEmpty(contentType)) return null;
-                if (!allowedContentTypes.Contains(contentType)) return null;
+            var imageData = await rangeRequestService.GetImageDataAsync(url);
 
-                return new ImageData
-                {
-                    Stream = stream,
-                    ContentType = contentType,
-                };
-            }
-            catch
-            {
-                return null;
-            }
+            if (imageData == null) return null;
+            if (!allowedContentTypes.Contains(imageData.ContentType)) return null;
+
+            return imageData;
         }
     }
 
