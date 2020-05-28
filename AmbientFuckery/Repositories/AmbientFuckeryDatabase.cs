@@ -9,7 +9,7 @@ namespace AmbientFuckery.Repositories
 
         public AmbientFuckeryDatabase()
         {
-            db = new LiteDatabase("AmbientFuckery");
+            db = new LiteDatabase("AmbientFuckery.db");
         }
 
         private ILiteCollection<T> GetCollection<T>() where T : class

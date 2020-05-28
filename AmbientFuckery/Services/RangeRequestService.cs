@@ -26,10 +26,11 @@ namespace AmbientFuckery.Services
             if (!head.IsSuccessStatusCode) return null;
             var length = head.Content.Headers.ContentLength;
             if (length == null) return null;
+            if (length.Value > 1024 * 1024 * 100) return null;
             if (!head.Headers.AcceptRanges.Contains("bytes")) return null;
 
             var contentType = head.Content.Headers.ContentType.MediaType;
-            var stream = new RangeRequestStream(httpClient, url, length.Value);
+            var stream = new RangeRequestStream(httpClient, url, (int)length.Value);
 
             return new ImageData
             {
