@@ -63,24 +63,26 @@ namespace AmbientFuckery.Tools
                 RequestUri = new Uri(url),
             };
 
-            bool shouldCache = cache.Count == position;
-            int requestCount = shouldCache ? Math.Max(count, MIN_CACHED_REQUEST_COUNT) : count;
+            int from = cache.Count;
+            int requestCount = position + count - from;
+            requestCount = Math.Max(requestCount, MIN_CACHED_REQUEST_COUNT);
+            int resultOffset = position - from;
 
-            int to = Math.Min(position + requestCount - 1, length - 1);
-            request.Headers.Range = new RangeHeaderValue(position, to);
+            int to = Math.Min(from + requestCount - 1, length - 1);
+            request.Headers.Range = new RangeHeaderValue(from, to);
 
             using HttpResponseMessage response = await httpClient.SendAsync(request);
             response.EnsureSuccessStatusCode();
 
             byte[] bytes = await response.Content.ReadAsByteArrayAsync();
-            int ret = Math.Min(bytes.Length, count);
+            int bytesToReturn = Math.Min(bytes.Length - resultOffset, count);
 
-            Array.Copy(bytes, 0, buffer, offset, ret);
-            if (shouldCache) cache.AddRange(bytes);
+            Array.Copy(bytes, resultOffset, buffer, offset, bytesToReturn);
+            cache.AddRange(bytes);
 
-            position += ret;
+            position += bytesToReturn;
 
-            return ret;
+            return bytesToReturn;
         }
 
         private int ReadFromCache(byte[] buffer, int offset, int count)
