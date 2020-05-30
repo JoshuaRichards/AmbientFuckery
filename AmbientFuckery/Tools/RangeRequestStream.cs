@@ -11,6 +11,8 @@ namespace AmbientFuckery.Tools
 {
     public class RangeRequestStream : Stream
     {
+        private const int MIN_CACHED_REQUEST_COUNT = 8192;
+
         private readonly HttpClient httpClient;
         private readonly string url;
         private readonly int length;
@@ -42,28 +44,15 @@ namespace AmbientFuckery.Tools
             if (position >= length || count == 0) return 0;
             if (position + count > length) count = length - position;
 
-            var bytesReadFromCache = ReadFromCache(buffer, offset, count);
+            int bytesReadFromCache = ReadFromCache(buffer, offset, count);
             if (bytesReadFromCache == count) return bytesReadFromCache;
 
-            position += bytesReadFromCache;
             count -= bytesReadFromCache;
             offset += bytesReadFromCache;
 
-            var bytesReadFromHttp = ReadFromHttpAsync(buffer, offset, count).Result;
-            if (bytesReadFromHttp == 0) return bytesReadFromCache;
+            int bytesReadFromHttp = ReadFromHttpAsync(buffer, offset, count).Result;
 
-            var bytesRead = bytesReadFromCache + bytesReadFromHttp;
-            var shouldCache = cache.Count == position;
-            position += bytesReadFromHttp;
-            if (!shouldCache) return bytesRead;
-
-            var upperBound = offset + count;
-            while (offset < upperBound)
-            {
-                cache.Add(buffer[offset++]);
-            }
-
-            return bytesRead;
+            return bytesReadFromCache + bytesReadFromHttp;
         }
 
         private async Task<int> ReadFromHttpAsync(byte[] buffer, int offset, int count)
@@ -73,26 +62,38 @@ namespace AmbientFuckery.Tools
                 Method = HttpMethod.Get,
                 RequestUri = new Uri(url),
             };
-            var to = Math.Min(position + count - 1, length - 1);
+
+            bool shouldCache = cache.Count == position;
+            int requestCount = shouldCache ? Math.Max(count, MIN_CACHED_REQUEST_COUNT) : count;
+
+            int to = Math.Min(position + requestCount - 1, length - 1);
             request.Headers.Range = new RangeHeaderValue(position, to);
 
-            using var response = await httpClient.SendAsync(request);
+            using HttpResponseMessage response = await httpClient.SendAsync(request);
             response.EnsureSuccessStatusCode();
 
-            using var stream = await response.Content.ReadAsStreamAsync();
-            var bytesRead = await stream.ReadAsync(buffer, offset, count);
-            return bytesRead;
+            byte[] bytes = await response.Content.ReadAsByteArrayAsync();
+            int ret = Math.Min(bytes.Length, count);
+
+            Array.Copy(bytes, 0, buffer, offset, ret);
+            if (shouldCache) cache.AddRange(bytes);
+
+            position += ret;
+
+            return ret;
         }
 
         private int ReadFromCache(byte[] buffer, int offset, int count)
         {
-            if (Position >= cache.Count) return 0;
+            if (position >= cache.Count) return 0;
 
             int bytesRead = 0;
             for (int i = position; i < cache.Count && bytesRead < count; i++, bytesRead++)
             {
                 buffer[offset++] = cache[i];
             }
+
+            position += bytesRead;
             return bytesRead;
         }
 
@@ -120,7 +121,7 @@ namespace AmbientFuckery.Tools
                 throw new InvalidOperationException();
             }
 
-            return Position;
+            return position;
         }
 
         #region boring stuff

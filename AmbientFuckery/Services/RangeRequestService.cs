@@ -18,13 +18,16 @@ namespace AmbientFuckery.Services
 
         public async Task<ImageData> GetImageDataAsync(string url)
         {
-            using var head = await httpClient.SendAsync(new HttpRequestMessage
-            {
-                RequestUri = new Uri(url),
-                Method = HttpMethod.Head,
-            });
+            using HttpResponseMessage head = await httpClient.SendAsync(
+                new HttpRequestMessage
+                {
+                    RequestUri = new Uri(url),
+                    Method = HttpMethod.Head,
+                }
+            );
+
             if (!head.IsSuccessStatusCode) return null;
-            var length = head.Content.Headers.ContentLength;
+            long? length = head.Content.Headers.ContentLength;
             if (length == null) return null;
             if (length.Value > 1024 * 1024 * 100) return null;
             if (!head.Headers.AcceptRanges.Contains("bytes")) return null;
