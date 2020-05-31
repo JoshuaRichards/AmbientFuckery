@@ -1,10 +1,9 @@
-﻿using System;
+﻿using Nito.AsyncEx.Synchronous;
+using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace AmbientFuckery.Tools
@@ -17,23 +16,12 @@ namespace AmbientFuckery.Tools
         private readonly string url;
         private readonly int length;
 
-        public override long Length => length;
-        public override long Position
-        {
-            get => position;
-            set
-            {
-                if (value > int.MaxValue) throw new ArgumentOutOfRangeException();
-
-                position = (int)value;
-            }
-        }
-
         private readonly List<byte> cache = new List<byte>();
         private int position = 0;
 
         public RangeRequestStream(HttpClient httpClient, string url, int length)
         {
+            if (length < 0) throw new ArgumentOutOfRangeException(nameof(length));
             this.httpClient = httpClient;
             this.url = url;
             this.length = length;
@@ -50,9 +38,15 @@ namespace AmbientFuckery.Tools
             count -= bytesReadFromCache;
             offset += bytesReadFromCache;
 
-            int bytesReadFromHttp = ReadFromHttpAsync(buffer, offset, count).Result;
+            int bytesReadFromHttp = AsyncToSync(() => ReadFromHttpAsync(buffer, offset, count));
 
             return bytesReadFromCache + bytesReadFromHttp;
+        }
+
+        private T AsyncToSync<T>(Func<Task<T>> f)
+        {
+            var task = Task.Run(async () => await f());
+            return task.WaitAndUnwrapException();
         }
 
         private async Task<int> ReadFromHttpAsync(byte[] buffer, int offset, int count)
@@ -127,6 +121,17 @@ namespace AmbientFuckery.Tools
         }
 
         #region boring stuff
+        public override long Length => length;
+        public override long Position
+        {
+            get => position;
+            set
+            {
+                if (value >= length || value < 0) throw new ArgumentOutOfRangeException();
+
+                position = (int)value;
+            }
+        }
         public override bool CanRead => true;
         public override bool CanSeek => true;
         public override bool CanWrite => false;
