@@ -66,7 +66,7 @@ namespace AmbientFuckery.Services
                     yield return submission.Data;
                 }
 
-                if (data.After == null) break;
+                if (string.IsNullOrEmpty(data.After)) break;
 
                 url = $"{baseUrl}&after={data.After}";
             }
