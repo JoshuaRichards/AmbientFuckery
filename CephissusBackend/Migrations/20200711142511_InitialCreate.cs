@@ -16,7 +16,9 @@ namespace CephissusBackend.Migrations
                     RefreshToken = table.Column<string>(nullable: false),
                     Scope = table.Column<string>(nullable: false),
                     DisplayName = table.Column<string>(nullable: false),
-                    ProfilePic = table.Column<string>(nullable: false)
+                    ProfilePic = table.Column<string>(nullable: false),
+                    Sub = table.Column<string>(nullable: false),
+                    Email = table.Column<string>(nullable: false)
                 },
                 constraints: table =>
                 {

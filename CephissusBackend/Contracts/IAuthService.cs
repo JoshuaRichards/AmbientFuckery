@@ -1,4 +1,5 @@
 ﻿using CephissusBackend.Dtos;
+using System;
 using System.Threading.Tasks;
 
 namespace CephissusBackend.Contracts
@@ -6,6 +7,6 @@ namespace CephissusBackend.Contracts
     public interface IAuthService
     {
         string GetAuthRedirect();
-        Task<GoogleTokenResponse> OauthCallback(string code);
+        Task<Guid> OauthCallbackAsync(string code);
     }
 }

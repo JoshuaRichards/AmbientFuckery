@@ -21,10 +21,13 @@ namespace CephissusBackend
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_3_0);
+            //services.AddMvc()
+            //    .SetCompatibilityVersion(CompatibilityVersion.Version_3_0);
+            services.AddControllers().AddNewtonsoftJson();
             services.AddDbContext<CephissusContext>(builder => builder.UseSqlite(Configuration.GetConnectionString("Cephissus")));
             services.AddTransient<HttpClient>();
             services.AddTransient<IAuthService, AuthService>();
+            services.AddTransient<IUserRepository, UserRepository>();
         }
 
         public void Configure(IApplicationBuilder app)

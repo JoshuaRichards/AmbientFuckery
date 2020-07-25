@@ -30,6 +30,10 @@ namespace CephissusBackend.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("ProfilePic")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -39,6 +43,10 @@ namespace CephissusBackend.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Scope")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Sub")
                         .IsRequired()
                         .HasColumnType("TEXT");
 

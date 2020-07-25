@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CephissusBackend.Migrations
 {
     [DbContext(typeof(CephissusContext))]
-    [Migration("20200628110402_InitialCreate")]
+    [Migration("20200711142511_InitialCreate")]
     partial class InitialCreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -32,6 +32,10 @@ namespace CephissusBackend.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("ProfilePic")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -41,6 +45,10 @@ namespace CephissusBackend.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Scope")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Sub")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
