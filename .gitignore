@@ -362,3 +362,8 @@ FodyWeavers.xsd
 *.db
 *.db-shm
 *.db-wal
+
+*.pfx
+*.crt
+*.key
+

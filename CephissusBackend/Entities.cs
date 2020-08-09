@@ -37,5 +37,20 @@ namespace CephissusBackend.Entities
         [Required]
         public string Email { get; set; }
     }
+
+    public class SubredditConfig
+    {
+        public Guid Id { get; set; }
+        public string SubredditName { get; set; }
+        public int MicScore { get; set; }
+        public int MaxFetch { get; set; }
+        public double MinAspectRatio { get; set; }
+        public int MinHeight { get; set; }
+        public bool AllowNsfw { get; set; }
+
+        [JsonIgnore]
+        public virtual User User { get; set; }
+    }
+
 }
 
