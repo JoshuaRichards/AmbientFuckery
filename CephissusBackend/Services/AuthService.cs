@@ -30,7 +30,7 @@ namespace CephissusBackend.Services
         public string GetAuthRedirect()
         {
             var clientId = Environment.GetEnvironmentVariable("AMBIENT_FUCKERY_CLIENT_ID");
-            var redirectUri = "https://localhost:6969/auth/oauthcallback";
+            var redirectUri = "https://localhost:4242/auth/oauthcallback";
             var scope = "https://www.googleapis.com/auth/photoslibrary openid profile email";
 
             var url = new StringBuilder();
@@ -98,7 +98,7 @@ namespace CephissusBackend.Services
         {
             var clientId = Environment.GetEnvironmentVariable("AMBIENT_FUCKERY_CLIENT_ID");
             var clientSecret = Environment.GetEnvironmentVariable("AMBIENT_FUCKERY_CLIENT_SECRET");
-            var redirectUri = "https://localhost:6969/auth/oauthcallback";
+            var redirectUri = "https://localhost:4242/auth/oauthcallback";
 
             var url = new StringBuilder();
             url.Append("https://oauth2.googleapis.com/token?");

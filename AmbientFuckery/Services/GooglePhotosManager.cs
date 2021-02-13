@@ -116,7 +116,7 @@ namespace AmbientFuckery.Services
             var createResponse = await googleHttpClient.PostAsync(
                 "https://photoslibrary.googleapis.com/v1/mediaItems:batchCreate", createContent
             );
-            createResponse.EnsureSuccessStatusCode();
+
 
             var newMediaItemResults = JObject.Parse(await createResponse.Content.ReadAsStringAsync())
                 .Value<JArray>("newMediaItemResults");

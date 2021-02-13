@@ -50,7 +50,7 @@ namespace CephissusBackend
 
         public void Configure(IApplicationBuilder app)
         {
-            app.UseHsts();
+            //app.UseHsts();
 
             app.UseCors(builder =>
             {
@@ -60,7 +60,7 @@ namespace CephissusBackend
                 builder.WithOrigins("https://localhost:4242");
             });
 
-            app.UseHttpsRedirection();
+            //app.UseHttpsRedirection();
             app.UseRouting();
 
             app.UseAuthentication();

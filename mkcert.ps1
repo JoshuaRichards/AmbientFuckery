@@ -11,7 +11,7 @@ $localDns = $computerName.ToLower() + ".local"
     Out-File -Encoding utf8 -Append -NoNewline ssl.conf
 
 openssl genrsa -out cephissus.key 4096
-openssl req -subj "/CN=cephissus" -new -key cephissus.key -out cephissus.csr -extensions SAN -config ssl.conf -days 90
+openssl req -subj "/CN=cephissus" -new -key cephissus.key -out cephissus.csr -extensions SAN -config ssl.conf -days +90
 
 openssl x509 -req -in cephissus.csr -CA root.crt -CAkey root.key -CAcreateserial `
     -out cephissus.crt -extensions SAN -extfile ssl.conf

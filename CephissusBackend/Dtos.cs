@@ -1,5 +1,7 @@
 ﻿using CephissusBackend.Entities;
 using Newtonsoft.Json;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace CephissusBackend.Dtos
 {
@@ -36,5 +38,10 @@ namespace CephissusBackend.Dtos
         public string Email { get; set; }
         [JsonProperty("picture")]
         public string Picture { get; set; }
+    }
+
+    public class ConfigResponse
+    {
+        public ICollection<ManagedAlbum> ManagedAlbums { get; set; }
     }
 }

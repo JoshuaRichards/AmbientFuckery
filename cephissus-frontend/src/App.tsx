@@ -1,6 +1,16 @@
+import { createMuiTheme, CssBaseline, ThemeProvider } from '@material-ui/core';
+import { purple } from '@material-ui/core/colors';
 import React, { useState, useEffect } from 'react';
 import './App.css';
 import { auth, AuthResponse } from "./auth";
+import { Config } from './config/ConfigElement';
+
+const theme = createMuiTheme({
+    palette: {
+        type: "dark",
+        primary: purple,
+    }
+});
 
 function App(): JSX.Element {
     const [authResponse, setAuthResponse] = useState<AuthResponse>();
@@ -25,9 +35,10 @@ function App(): JSX.Element {
     const user = authResponse.user;
 
     return (
-        <div>
-            <p>Hello, {user.displayName}</p>
-        </div>
+        <ThemeProvider theme={theme} >
+            <CssBaseline />
+            <Config />
+        </ThemeProvider>
     );
 }
 

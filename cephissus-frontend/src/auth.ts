@@ -16,6 +16,6 @@ export type AuthResponse = {
 };
 
 export function auth(): Promise<AuthResponse> {
-    return fetch("https://localhost:6969/auth", { method: "POST", credentials: "include" })
+    return fetch("https://localhost:4242/auth", { method: "POST", credentials: "include" })
         .then(r => r.json() as Promise<AuthResponse>);
 }
